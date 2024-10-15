@@ -2,8 +2,10 @@ import express from 'express';
 import puppeteer from 'puppeteer';
 import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
+import cors from "cors"
 
 const app = express();
+app.use(cors("*"));
 const PORT = 5000;
 connectDB();
 
