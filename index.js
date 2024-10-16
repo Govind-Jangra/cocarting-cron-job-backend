@@ -6,14 +6,22 @@ import cors from "cors"
 
 const app = express();
 app.use(cors("*"));
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 connectDB();
 
 app.use(express.json());
-async function fetchReducedHTML(url, timeout = 30000) {
+async function fetchReducedHTML(url, timeout = 90000) {
     const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'], 
+        args: [
+            "--disable-setuid-sandbox",
+            "--no-sandbox",
+            // "--single-process",
+            "--no-zygote",
+          ],
+          executablePath:
+            process.env.NODE_ENV === "production"
+              ? process.env.PUPPETEER_EXECUTABLE_PATH
+              : puppeteer.executablePath(),
     });
 
     const page = await browser.newPage();
