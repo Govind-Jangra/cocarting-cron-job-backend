@@ -20,7 +20,6 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     libgbm-dev \
     chromium-browser \
-    --no-install-recommends
 
 WORKDIR /app
 
