@@ -19,7 +19,12 @@ RUN apt-get update && apt-get install -y \
     libu2f-udev \
     xdg-utils \
     libgbm-dev \
-    chromium-browser \
+    --no-install-recommends
+
+RUN apt-get install -y chromium
+
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROME_PATH=/usr/lib/chromium/
 
 WORKDIR /app
 
@@ -28,9 +33,6 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-
-ENV CHROME_BIN=/usr/bin/chromium-browser
-ENV CHROME_PATH=/usr/lib/chromium-browser/
 
 EXPOSE 5000
 
