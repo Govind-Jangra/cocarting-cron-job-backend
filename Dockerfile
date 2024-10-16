@@ -32,8 +32,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY --chown=node:node . .
-RUN npm run build \
-    && npm prune --production
+RUN npm prune --production
 
 # Production stage
 FROM node:18-alpine
