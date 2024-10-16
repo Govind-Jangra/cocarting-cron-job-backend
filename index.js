@@ -1,24 +1,20 @@
 import express from 'express';
+import puppeteer from 'puppeteer';
 import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
-import cors from 'cors';
-import chromium from '@sparticuz/chromium-min'
-import puppeteer from 'puppeteer-core';
+import cors from "cors"
 
 const app = express();
 app.use(cors("*"));
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 connectDB();
 
 app.use(express.json());
-
-async function fetchReducedHTML(url, timeout = 90000) {
-    const isLocal=!!process.env.CHROME_EXECUTABLE_PATH;
+async function fetchReducedHTML(url, timeout = 30000) {
     const browser = await puppeteer.launch({
-        args: isLocal ? puppeteer.defaultArgs() : chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath('chromium-v129.0.0-pack.tar'),
-        headless: chromium.headless,
+        headless: true,
+        executablePath: `/usr/bin/google-chrome`,
+        args: [`--no-sandbox`, `--headless`, `--disable-gpu`, `--disable-dev-shm-usage`],
       });
 
     const page = await browser.newPage();
@@ -71,7 +67,7 @@ app.get('/', (req, res) => {
     res.send('API is running...');
 });
 
-app.use('/selector', productRoutes);
+app.use('/selector',productRoutes)
 
 app.use((err, req, res, next) => {
     res.status(500).json({ message: err.message });
