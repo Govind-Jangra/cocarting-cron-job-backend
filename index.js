@@ -1,9 +1,9 @@
 import express from 'express';
-import { Builder, By } from 'selenium-webdriver';
-import chrome from 'selenium-webdriver/chrome.js';
 import connectDB from './config/db.js';
 import productRoutes from './routes/productRoutes.js';
 import cors from 'cors';
+import chromium from '@sparticuz/chromium-min'
+import puppeteer from 'puppeteer-core';
 
 const app = express();
 app.use(cors("*"));
@@ -13,24 +13,35 @@ connectDB();
 app.use(express.json());
 
 async function fetchReducedHTML(url, timeout = 90000) {
-    const options = new chrome.Options();
-    options.addArguments('--no-sandbox', '--disable-setuid-sandbox', '--headless', '--disable-gpu');
+    const isLocal=!!process.env.CHROME_EXECUTABLE_PATH;
+    const browser = await puppeteer.launch({
+        args: isLocal ? puppeteer.defaultArgs() : chromium.args,
+        defaultViewport: chromium.defaultViewport,
+        executablePath: process.env.CHROME_EXECUTABLE_PATH || await chromium.executablePath('chromium-v129.0.0-pack.tar'),
+        headless: chromium.headless,
+      });
 
-    options.setBinary(process.env.CHROME_BIN);
+    const page = await browser.newPage();
 
-    const driver = new Builder().forBrowser('chrome').setChromeOptions(options).build();
+    const userAgents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
+    ];
+    const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+    await page.setUserAgent(randomUserAgent);
 
     try {
-        await driver.get(url);
+        await page.goto(url, { waitUntil: 'networkidle2', timeout });
 
-        await driver.sleep(5000); 
-        const html = await driver.getPageSource();
+        const html = await page.content();
         return html;
+
     } catch (err) {
-        console.error('Error fetching HTML with Selenium:', err);
+        console.error('Error fetching HTML with Puppeteer:', err);
         return null;
     } finally {
-        await driver.quit();
+        await browser.close();
     }
 }
 
